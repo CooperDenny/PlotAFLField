@@ -13,6 +13,3 @@ This repository contains a function to plot an AFL field
 
 `afl_field(venue_length = 170, venue_width = 116, venue_arclength = 50)` 
 ![AFL Field](images/afl_field_2.png)
-
-`afl_field(venue_length = 155, venue_width = 136, venue_arclength = 50)` 
-![AFL Field](images/afl_field_3.png)
