@@ -5,8 +5,14 @@ This repository contains a set of functions to plot an AFL field
 - `plot_afl_field.R`: R script containing the function to plot an AFL field
 - `PlotAFLField.Rproj`: R project file for the PlotAFLField project.
 - `README.md`: This file providing an overview of the repository.
-- `afl_field.png`: Image of the plot that the function generates
+- `images`: Folder containing images of the plots that the functions generate
 
-## Example Plot
+## Example Plots
 `afl_field(venue_length = 160, venue_width = 140, venue_arclength = 50)` 
-![AFL Field](afl_field.png)
+![AFL Field](images/afl_field_1.png)
+
+`afl_field(venue_length = 170, venue_width = 116, venue_arclength = 50)` 
+![AFL Field](images/afl_field_2.png)
+
+`afl_field(venue_length = 155, venue_width = 136, venue_arclength = 50)` 
+![AFL Field](images/afl_field_3.png)
