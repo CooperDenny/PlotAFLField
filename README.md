@@ -114,3 +114,35 @@ The nine zones from `afl_zones(160, 140, 50)`
 
 `afl_heatmap(possessions, 160, 140, 50, vertical = TRUE)`
 ![Vertical heatmap](images/afl_heatmap_vertical.png)
+
+## Gallery
+
+### Any ground shape
+
+The same calls on a long, narrow ground (185 × 125), a compact one (150 × 120) and a round one (150 × 150). The 50 m arcs always meet the boundary exactly.
+
+<img src="images/afl_shape_long.png" width="32%" alt="Long narrow ground"> <img src="images/afl_shape_compact.png" width="32%" alt="Compact ground"> <img src="images/afl_shape_round.png" width="32%" alt="Round ground">
+
+Distance rings at both ends of the long ground: `afl_field(185, 125, 50) + afl_distance_rings(185, 125, end = "both")`
+![Distance rings on a long ground](images/afl_shape_long_rings.png)
+
+### Half fields
+
+`afl_half_field(160, 140, 50, end = "left")` and custom rings, `afl_half_field(..., vertical = TRUE) + afl_distance_rings(160, 140, distances = c(15, 25, 35, 45))`
+
+<img src="images/afl_half_field_left.png" width="30%" alt="Left half field"> <img src="images/afl_rings_custom.png" width="68%" alt="Custom distance rings">
+
+### Zones
+
+A narrower 30 m corridor: `afl_zones(160, 140, 50, corridor_width = 30)`, and kick efficiency with that corridor
+
+<img src="images/afl_zones_corridor_30.png" width="49%" alt="Zones with a 30 m corridor"> <img src="images/afl_zone_map_efficiency_corridor_30.png" width="49%" alt="Kick efficiency, 30 m corridor">
+
+A vertical zone map: `afl_zone_map(possessions, 160, 140, 50, vertical = TRUE)`
+![Vertical zone map](images/afl_zone_map_vertical.png)
+
+### Heatmap bandwidth
+
+`bandwidth` is the spread, in metres, given to each event. The default 8 m shows broad areas; 4 m shows local detail but gets noisy with little data. These are the same possessions as the heatmap above.
+
+<img src="images/afl_heatmap.png" width="49%" alt="Heatmap, bandwidth 8"> <img src="images/afl_heatmap_bandwidth_4.png" width="49%" alt="Heatmap, bandwidth 4">

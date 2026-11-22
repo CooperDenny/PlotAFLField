@@ -100,3 +100,38 @@ save(afl_zone_map(kicks, L, W, R, value = "effective", colour = "#1B7837", min_n
 
 save(afl_heatmap(possessions, L, W, R), "afl_heatmap.png", 7.6, 6)
 save(afl_heatmap(possessions, L, W, R, vertical = TRUE), "afl_heatmap_vertical.png", 6.2, 7)
+
+##################################################################
+# Gallery: ground shapes and options
+##################################################################
+
+#The same functions on differently shaped grounds (dimensions in metres)
+save(afl_field(185, 125, 50), "afl_shape_long.png", 7, 5.2)
+save(afl_field(150, 120, 50), "afl_shape_compact.png", 7, 5.8)
+save(afl_field(150, 150, 50), "afl_shape_round.png", 6.4, 6.4)
+save(afl_field(185, 125, 50) + afl_distance_rings(185, 125, end = "both"), "afl_shape_long_rings.png", 7, 5.2)
+
+#The left-hand end, and custom ring distances on a vertical half field
+save(afl_half_field(L, W, R, end = "left"), "afl_half_field_left.png", 4.6, 6.6)
+save(afl_half_field(L, W, R, from = A - R - 3, vertical = TRUE) +
+       afl_distance_rings(L, W, distances = c(15, 25, 35, 45)), "afl_rings_custom.png", 7.4, 3.8)
+
+#Zones with a narrower 30m corridor, and a vertical zone map
+zones30 <- afl_zones(L, W, R, corridor_width = 30)
+names30 <- do.call(rbind, lapply(split(zones30, zones30$zone), function(d) {
+  data.frame(label = paste(d$third[1], d$lane[1], sep = "\n"), t(polygon_centroid(d$x, d$y)))
+}))
+names30$y[names30$label == "Midfield\nCorridor"] <- -9
+save(afl_field(L, W, R) +
+       geom_polygon(data = zones30, aes(x, y, group = zone), fill = NA, colour = "white",
+                    linetype = "dotted", inherit.aes = FALSE) +
+       geom_label(data = names30, aes(x, y, label = label), size = 2.6, lineheight = 0.9,
+                  label.size = 0, fill = "white", alpha = 0.85, inherit.aes = FALSE),
+     "afl_zones_corridor_30.png", 7, 6)
+save(afl_zone_map(possessions, L, W, R, vertical = TRUE), "afl_zone_map_vertical.png", 6.6, 7)
+save(afl_zone_map(kicks, L, W, R, value = "effective", colour = "#1B7837", min_n = 8,
+                  legend_title = "Kick efficiency", corridor_width = 30),
+     "afl_zone_map_efficiency_corridor_30.png", 7.6, 6)
+
+#A tighter heatmap bandwidth shows more local detail
+save(afl_heatmap(possessions, L, W, R, bandwidth = 4), "afl_heatmap_bandwidth_4.png", 7.6, 6)

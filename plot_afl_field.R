@@ -458,10 +458,14 @@ afl_zone_map <- function(data, venue_length = 160, venue_width = 140, venue_arcl
   }))
   centres <- merge(centres, stats, by = "zone")
   centres <- centres[centres$n > 0, ]
-  #The midfield corridor's centre is the centre bounce: move its label off the circles
-  #(below them, or to their right on a vertical ground)
+  #The midfield corridor's centre is the centre bounce: move its label below the circles
+  #(down the page is -y on a horizontal ground and -x on a vertical one)
   mid <- centres$zone == "Midfield - Corridor"
-  centres$y[mid] <- centres$y[mid] - min(12, corridor_width / 4)
+  if (vertical) {
+    centres$x[mid] <- centres$x[mid] - 12
+  } else {
+    centres$y[mid] <- centres$y[mid] - min(12, corridor_width / 4)
+  }
 
   field <- data.frame(x = venue_length, y = venue_width)
   p <- ggplot(field) +
