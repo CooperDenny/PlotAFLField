@@ -258,11 +258,49 @@ polygon_centroid <- function(x, y) {
 
 
 ##################################################################
+# Page layout
+##################################################################
+
+#How a ground sits on the page. Horizontal: x (goal to goal) runs across the page.
+#Vertical: a quarter turn so x runs up the page with the goal at `end` at the top.
+#For the +x goal that is an anticlockwise turn (+y ends up on the left); for the -x
+#goal a clockwise one. Either way it is a rotation, never a mirror image, so left and
+#right stay as the attacking team sees them.
+#- xlim, ylim: the area to show, in metres
+#- crop: TRUE shows exactly xlim/ylim; FALSE adds ggplot's usual margin
+afl_view <- function(vertical, xlim, ylim, crop = FALSE, end = "right") {
+  stopifnot(is.logical(vertical), length(vertical) == 1, !is.na(vertical))
+  if (!vertical) {
+    return(if (crop) coord_fixed(ratio = 1, xlim = xlim, ylim = ylim, expand = FALSE)
+           else coord_fixed(ratio = 1))
+  }
+  #Coordinate limits are given in data units and pass through the scale's transform,
+  #so on a reversed scale they must be given high-to-low: low-to-high limits would
+  #undo the reversal and mirror the ground. coord_flip() has no fixed ratio, so
+  #theme(aspect.ratio) keeps metres square; fixed limits keep it exact whatever
+  #layers are added.
+  aspect <- theme(aspect.ratio = diff(range(xlim)) / diff(range(ylim)))
+  if (end == "right") {
+    list(scale_y_reverse(), coord_flip(xlim = xlim, ylim = rev(ylim), expand = !crop), aspect)
+  } else {
+    list(scale_x_reverse(), coord_flip(xlim = rev(xlim), ylim = ylim, expand = !crop), aspect)
+  }
+}
+
+#The whole ground: the posts reach 12m past each goal line and the grass 5m past the boundary
+afl_full_view <- function(venue_length, venue_width, vertical) {
+  afl_view(vertical, xlim = c(-venue_length / 2 - 12, venue_length / 2 + 12),
+           ylim = c(-venue_width / 2 - 5, venue_width / 2 + 5))
+}
+
+
+##################################################################
 # Plotting functions
 ##################################################################
 
 #Define the function to plot the AFL field
-afl_field <- function(venue_length = 160, venue_width = 140, venue_arclength = 50) {
+afl_field <- function(venue_length = 160, venue_width = 140, venue_arclength = 50,
+                      vertical = FALSE) {
 
   #This function, afl_field, generates a graphical representation of an Australian Football League (AFL) field.
   #The field is an oval shape with specific markings such as the goal posts, centre square, goal squares, centre circles, and 50m arcs.
@@ -271,8 +309,10 @@ afl_field <- function(venue_length = 160, venue_width = 140, venue_arclength = 5
   #- venue_length: The length of the field (default is 160 metres).
   #- venue_width: The width of the field (default is 140 metres).
   #- venue_arclength: The radius of the 50m arcs from the goal (default is 50 metres).
+  #- vertical: TRUE turns the ground to run up the page, with the +x goal at the top.
 
-  #It returns a ggplot object, so further layers can be added with `+`.
+  #It returns a ggplot object, so further layers can be added with `+`. Your data keeps
+  #the same x and y either way.
 
   afl_check_dims(venue_length, venue_width, venue_arclength)
 
@@ -286,7 +326,7 @@ afl_field <- function(venue_length = 160, venue_width = 140, venue_arclength = 5
 
     #Remove background and set aspect ratio
     theme_void() +
-    coord_fixed(ratio = 1)
+    afl_full_view(venue_length, venue_width, vertical)
 
   #Return the plot object
   return(oval)
@@ -295,14 +335,14 @@ afl_field <- function(venue_length = 160, venue_width = 140, venue_arclength = 5
 
 #Plot one end of the ground, for shot maps and inside 50 entries
 afl_half_field <- function(venue_length = 160, venue_width = 140, venue_arclength = 50,
-                           from = 0, end = c("right", "left"), goal_at_top = FALSE) {
+                           from = 0, end = c("right", "left"), vertical = FALSE) {
 
   #- from: Distance from the centre (metres) at which the view starts. 0 shows the
   #        whole half; venue_length/2 - venue_arclength - 3 frames the 50m arc.
   #- end:  "right" shows the goal at +x (the default attacking direction), "left" the goal at -x.
-  #- goal_at_top: TRUE turns the view a quarter turn so the goal is at the top. The
-  #        plot becomes wide and short, which suits wide panels. Data still uses the
-  #        same x and y; the view is rotated, not mirrored.
+  #- vertical: TRUE turns the view so the goal is at the top. The plot becomes wide
+  #        and short, which suits wide panels. Data still uses the same x and y; the
+  #        view is rotated, not mirrored.
 
   afl_check_dims(venue_length, venue_width, venue_arclength)
   end <- match.arg(end)
@@ -311,34 +351,15 @@ afl_half_field <- function(venue_length = 160, venue_width = 140, venue_arclengt
   if (!is.numeric(from) || length(from) != 1 || from < 0 || from >= A) {
     stop("from must be between 0 and venue_length / 2.", call. = FALSE)
   }
-  stopifnot(is.logical(goal_at_top), length(goal_at_top) == 1)
   xlim <- if (end == "right") c(from, A + 13) else c(-A - 13, -from)
   ylim <- c(-B - 5, B + 5)
 
   field <- data.frame(x = venue_length, y = venue_width)
-  p <- ggplot(field) +
+  ggplot(field) +
     afl_surface(venue_length, venue_width) +
     afl_markings(venue_length, venue_width, venue_arclength) +
-    theme_void()
-
-  if (!goal_at_top) {
-    return(p + coord_fixed(ratio = 1, xlim = xlim, ylim = ylim, expand = FALSE))
-  }
-
-  #A quarter turn: x runs up the page, and the reversed scale keeps it a rotation
-  #(not a mirror image). Coordinate limits are given in data units and pass through
-  #the scale's transform, so on a reversed scale they must be given high-to-low:
-  #low-to-high limits would undo the reversal and mirror the ground.
-  #theme(aspect.ratio) keeps metres square because coord_flip() has no fixed ratio.
-  if (end == "right") {
-    p + scale_y_reverse() +
-      coord_flip(xlim = xlim, ylim = rev(ylim), expand = FALSE) +
-      theme(aspect.ratio = diff(xlim) / diff(ylim))
-  } else {
-    p + scale_x_reverse() +
-      coord_flip(xlim = rev(xlim), ylim = ylim, expand = FALSE) +
-      theme(aspect.ratio = diff(xlim) / diff(ylim))
-  }
+    theme_void() +
+    afl_view(vertical, xlim, ylim, crop = TRUE, end = end)
 }
 
 
@@ -400,7 +421,8 @@ afl_angle_contours <- function(venue_length = 160, venue_width = 140,
 #(e.g. a logical "effective disposal" column gives an efficiency rate per zone)
 afl_zone_map <- function(data, venue_length = 160, venue_width = 140, venue_arclength = 50,
                          x = "x", y = "y", value = NULL, corridor_width = 50,
-                         colour = "#B2182B", labels = TRUE, min_n = 1, legend_title = NULL) {
+                         colour = "#B2182B", labels = TRUE, min_n = 1, legend_title = NULL,
+                         vertical = FALSE) {
 
   afl_check_dims(venue_length, venue_width, venue_arclength)
   if (!all(c(x, y, value) %in% names(data))) {
@@ -441,7 +463,8 @@ afl_zone_map <- function(data, venue_length = 160, venue_width = 140, venue_arcl
   }))
   centres <- merge(centres, stats, by = "zone")
   centres <- centres[centres$n > 0, ]
-  #The midfield corridor's centre is the centre bounce: drop its label below the circles
+  #The midfield corridor's centre is the centre bounce: move its label off the circles
+  #(below them, or to their right on a vertical ground)
   mid <- centres$zone == "Midfield - Corridor"
   centres$y[mid] <- centres$y[mid] - min(12, corridor_width / 4)
 
@@ -454,7 +477,7 @@ afl_zone_map <- function(data, venue_length = 160, venue_width = 140, venue_arcl
                         labels = fmt, limits = if (is.null(value) || !rate) NULL else c(0, 1)) +
     afl_markings(venue_length, venue_width, venue_arclength) +
     theme_void() +
-    coord_fixed(ratio = 1)
+    afl_full_view(venue_length, venue_width, vertical)
 
   if (labels && nrow(centres) > 0) {
     p <- p + geom_label(data = centres, aes(x, y, label = label), size = 3, lineheight = 0.9,
@@ -471,7 +494,8 @@ afl_zone_map <- function(data, venue_length = 160, venue_width = 140, venue_arcl
 #starts at the grass colour, because semi-transparent warm colours over green turn brown.
 afl_heatmap <- function(data, venue_length = 160, venue_width = 140, venue_arclength = 50,
                         x = "x", y = "y", bandwidth = 8, resolution = 0.5,
-                        colours = c(afl_grass_colour, "#C8E06B", "#FFD23F", "#FD8D3C", "#BD0026")) {
+                        colours = c(afl_grass_colour, "#C8E06B", "#FFD23F", "#FD8D3C", "#BD0026"),
+                        vertical = FALSE) {
 
   afl_check_dims(venue_length, venue_width, venue_arclength)
   if (!all(c(x, y) %in% names(data))) {
@@ -506,5 +530,5 @@ afl_heatmap <- function(data, venue_length = 160, venue_width = 140, venue_arcle
                          labels = c("Low", "High"), name = "Density") +
     afl_markings(venue_length, venue_width, venue_arclength) +
     theme_void() +
-    coord_fixed(ratio = 1)
+    afl_full_view(venue_length, venue_width, vertical)
 }

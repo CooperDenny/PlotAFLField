@@ -5,7 +5,7 @@ R functions for plotting a customisable AFL field, and analysis views on top of 
 ## Functions (in `plot_afl_field.R`)
 
 - `afl_field(venue_length, venue_width, venue_arclength)` — the whole ground. Parameters control the oval dimensions — different AFL venues have different field sizes.
-- `afl_half_field(..., from, end, goal_at_top)` — one end, for shot maps. `goal_at_top` rotates with coord_flip + a reversed scale; coord limits pass through the scale transform, so they are given high-to-low on the reversed axis (low-to-high mirrors the ground)
+- `afl_half_field(..., from, end, vertical)` — one end, for shot maps
 - `afl_angle_contours(venue_length, venue_width, angles)` — layer of equal scoring-angle arcs (circles through both goal posts)
 - `afl_zones()` / `afl_zone_of()` / `afl_zone_map()` — 3 thirds x 3 lanes; corridor width is a parameter
 - `afl_heatmap()` — base-R Gaussian KDE clipped to the boundary, opaque ramp starting at the grass colour
@@ -33,6 +33,7 @@ Keep the signature and return type stable: FootyStatsApp sources this file from 
 - Outlines and arcs are drawn with `geom_path` (not ggforce) so line widths behave the same on every ggforce version.
 - Every marking is a row in `afl_marking_data()` (posts, straight lines, curved paths) and is drawn once by `afl_markings()`. Edit the tables rather than adding `geom_segment()` calls.
 - Analysis functions assume the team of interest attacks towards +x; "Left" lane is y > corridor_width / 2.
+- `vertical = TRUE` on every ground-drawing function goes through `afl_view()`: coord_flip + a reversed scale (a rotation, not a mirror) with fixed limits and theme(aspect.ratio) for square metres. Coord limits pass through the scale transform, so they are given high-to-low on the reversed axis (low-to-high mirrors the ground). New ground-drawing functions should end with `afl_view()` / `afl_full_view()` rather than their own coord.
 
 ## Example
 

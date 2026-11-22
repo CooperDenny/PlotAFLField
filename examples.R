@@ -25,6 +25,7 @@ set.seed(2026)
 
 save(afl_field(160, 140, 50), "afl_field_1.png", 7, 6)
 save(afl_field(170, 116, 50), "afl_field_2.png", 7, 5.2)
+save(afl_field(160, 140, 50, vertical = TRUE), "afl_field_vertical.png", 5.6, 7)
 save(afl_half_field(160, 140, 50), "afl_half_field.png", 4.6, 6.6)
 
 ##################################################################
@@ -52,15 +53,15 @@ shot_map <- afl_half_field(L, W, R, from = A - R - 3) +
   theme(legend.position = "bottom")
 save(shot_map, "afl_shot_map.png", 5.2, 6.4)
 
-#The same shots with the goal at the top: a wide, short panel
-shot_map_top <- afl_half_field(L, W, R, from = A - R - 3, goal_at_top = TRUE) +
+#The same shots with the ground vertical, goal at the top: a wide, short panel
+shot_map_top <- afl_half_field(L, W, R, from = A - R - 3, vertical = TRUE) +
   afl_angle_contours(L, W) +
   geom_point(data = shots, aes(x, y, fill = result), shape = 21, size = 3, stroke = 0.6,
              colour = "black") +
   scale_fill_manual(values = c(Goal = "#FFD23F", Behind = "#3A86FF", `No score` = "grey80"),
                     name = NULL) +
   theme(legend.position = "bottom")
-save(shot_map_top, "afl_shot_map_goal_at_top.png", 7.4, 4.2)
+save(shot_map_top, "afl_shot_map_vertical.png", 7.4, 4.2)
 
 ##################################################################
 # Zones
@@ -100,3 +101,4 @@ save(afl_zone_map(kicks, L, W, R, value = "effective", colour = "#1B7837", min_n
 ##################################################################
 
 save(afl_heatmap(possessions, L, W, R), "afl_heatmap.png", 7.6, 6)
+save(afl_heatmap(possessions, L, W, R, vertical = TRUE), "afl_heatmap_vertical.png", 6.2, 7)

@@ -16,15 +16,26 @@ afl_field(170, 116) +
 
 Coordinates are metres with the origin at the centre bounce and x running goal to goal. The analysis functions assume the team of interest attacks towards **+x** (the right-hand goal), so flip `x` and `y` for the quarters a team kicks the other way.
 
+### Vertical grounds
+
+Every function that draws a ground (`afl_field()`, `afl_half_field()`, `afl_zone_map()`, `afl_heatmap()`) takes `vertical = TRUE` to turn the ground so it runs up the page, with the +x goal at the top. Your data keeps the same x and y. The ground is rotated a quarter turn, not mirrored, so "left" stays the attacking team's left. Metres stay square because the panel's aspect ratio is fixed to the ground's dimensions, whatever layers you add. Layers such as `afl_angle_contours()` and your own `geom_point()`s rotate with the ground automatically.
+
+```r
+afl_field(160, 140, 50, vertical = TRUE) +
+  geom_point(data = shots, aes(x = x, y = y))   # same x/y as on a horizontal ground
+```
+
+Don't add `coord_flip()` or `coord_fixed()` on top of a vertical ground; it already has its coordinate system.
+
 | Function | What it draws |
 |---|---|
-| `afl_field(venue_length, venue_width, venue_arclength)` | The whole ground |
-| `afl_half_field(..., from = 0, end = "right", goal_at_top = FALSE)` | One end of the ground. `from` is where the view starts (m from centre); `venue_length/2 - venue_arclength - 3` frames the 50 m arc. `goal_at_top = TRUE` turns it a quarter turn (a rotation, not a mirror) so the goal is at the top: a wide, short panel |
+| `afl_field(venue_length, venue_width, venue_arclength, vertical = FALSE)` | The whole ground |
+| `afl_half_field(..., from = 0, end = "right", vertical = FALSE)` | One end of the ground. `from` is where the view starts (m from centre); `venue_length/2 - venue_arclength - 3` frames the 50 m arc. With `vertical = TRUE` the goal is at the top: a wide, short panel |
 | `afl_angle_contours(venue_length, venue_width, angles = c(10, 15, 20, 30))` | Layer: lines of equal scoring angle |
 | `afl_zones(..., corridor_width = 50)` | Data frame of the nine zone polygons (3 thirds × 3 lanes), clipped to the boundary |
 | `afl_zone_of(x, y, ..., corridor_width = 50)` | Which third, lane and zone each point is in |
-| `afl_zone_map(data, ..., value = NULL, min_n = 1)` | Zones shaded by share of events, or by the mean of `value` (e.g. an efficiency rate) |
-| `afl_heatmap(data, ..., bandwidth = 8)` | Smoothed density of event locations, clipped to the boundary |
+| `afl_zone_map(data, ..., value = NULL, min_n = 1, vertical = FALSE)` | Zones shaded by share of events, or by the mean of `value` (e.g. an efficiency rate) |
+| `afl_heatmap(data, ..., bandwidth = 8, vertical = FALSE)` | Smoothed density of event locations, clipped to the boundary |
 | `afl_markings(venue_length, venue_width, venue_arclength)` | Layer: every marking, to redraw lines on top of your own fill layers |
 
 The ground arguments are the same everywhere:
@@ -78,6 +89,9 @@ All event data in these examples is simulated; see `examples.R`.
 `afl_field(venue_length = 170, venue_width = 116, venue_arclength = 50)`
 ![AFL Field](images/afl_field_2.png)
 
+`afl_field(venue_length = 160, venue_width = 140, venue_arclength = 50, vertical = TRUE)`
+![Vertical AFL Field](images/afl_field_vertical.png)
+
 `afl_half_field(venue_length = 160, venue_width = 140, venue_arclength = 50)`
 ![AFL Half Field](images/afl_half_field.png)
 
@@ -87,8 +101,8 @@ All event data in these examples is simulated; see `examples.R`.
 Shot map: `afl_half_field(160, 140, 50, from = 27) + afl_angle_contours(160, 140) + geom_point(data = shots, ...)`
 ![Shot map](images/afl_shot_map.png)
 
-The same shots with `afl_half_field(160, 140, 50, from = 27, goal_at_top = TRUE)`
-![Shot map, goal at top](images/afl_shot_map_goal_at_top.png)
+The same shots with `afl_half_field(160, 140, 50, from = 27, vertical = TRUE)`
+![Shot map, vertical](images/afl_shot_map_vertical.png)
 
 The nine zones from `afl_zones(160, 140, 50)`
 ![Zones](images/afl_zones.png)
@@ -101,3 +115,6 @@ The nine zones from `afl_zones(160, 140, 50)`
 
 `afl_heatmap(possessions, 160, 140, 50)`
 ![Heatmap](images/afl_heatmap.png)
+
+`afl_heatmap(possessions, 160, 140, 50, vertical = TRUE)`
+![Vertical heatmap](images/afl_heatmap_vertical.png)
