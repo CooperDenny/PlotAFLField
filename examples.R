@@ -52,6 +52,16 @@ shot_map <- afl_half_field(L, W, R, from = A - R - 3) +
   theme(legend.position = "bottom")
 save(shot_map, "afl_shot_map.png", 5.2, 6.4)
 
+#The same shots with the goal at the top: a wide, short panel
+shot_map_top <- afl_half_field(L, W, R, from = A - R - 3, goal_at_top = TRUE) +
+  afl_angle_contours(L, W) +
+  geom_point(data = shots, aes(x, y, fill = result), shape = 21, size = 3, stroke = 0.6,
+             colour = "black") +
+  scale_fill_manual(values = c(Goal = "#FFD23F", Behind = "#3A86FF", `No score` = "grey80"),
+                    name = NULL) +
+  theme(legend.position = "bottom")
+save(shot_map_top, "afl_shot_map_goal_at_top.png", 7.4, 4.2)
+
 ##################################################################
 # Zones
 ##################################################################

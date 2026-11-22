@@ -19,7 +19,7 @@ Coordinates are metres with the origin at the centre bounce and x running goal t
 | Function | What it draws |
 |---|---|
 | `afl_field(venue_length, venue_width, venue_arclength)` | The whole ground |
-| `afl_half_field(..., from = 0, end = "right")` | One end of the ground. `from` is where the view starts (m from centre); `venue_length/2 - venue_arclength - 3` frames the 50 m arc |
+| `afl_half_field(..., from = 0, end = "right", goal_at_top = FALSE)` | One end of the ground. `from` is where the view starts (m from centre); `venue_length/2 - venue_arclength - 3` frames the 50 m arc. `goal_at_top = TRUE` turns it a quarter turn (a rotation, not a mirror) so the goal is at the top: a wide, short panel |
 | `afl_angle_contours(venue_length, venue_width, angles = c(10, 15, 20, 30))` | Layer: lines of equal scoring angle |
 | `afl_zones(..., corridor_width = 50)` | Data frame of the nine zone polygons (3 thirds × 3 lanes), clipped to the boundary |
 | `afl_zone_of(x, y, ..., corridor_width = 50)` | Which third, lane and zone each point is in |
@@ -86,6 +86,9 @@ All event data in these examples is simulated; see `examples.R`.
 
 Shot map: `afl_half_field(160, 140, 50, from = 27) + afl_angle_contours(160, 140) + geom_point(data = shots, ...)`
 ![Shot map](images/afl_shot_map.png)
+
+The same shots with `afl_half_field(160, 140, 50, from = 27, goal_at_top = TRUE)`
+![Shot map, goal at top](images/afl_shot_map_goal_at_top.png)
 
 The nine zones from `afl_zones(160, 140, 50)`
 ![Zones](images/afl_zones.png)

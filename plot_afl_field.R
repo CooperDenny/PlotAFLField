@@ -295,11 +295,14 @@ afl_field <- function(venue_length = 160, venue_width = 140, venue_arclength = 5
 
 #Plot one end of the ground, for shot maps and inside 50 entries
 afl_half_field <- function(venue_length = 160, venue_width = 140, venue_arclength = 50,
-                           from = 0, end = c("right", "left")) {
+                           from = 0, end = c("right", "left"), goal_at_top = FALSE) {
 
   #- from: Distance from the centre (metres) at which the view starts. 0 shows the
-  #        whole half; venue_length/2 - venue_arclength - 5 frames the 50m arc.
+  #        whole half; venue_length/2 - venue_arclength - 3 frames the 50m arc.
   #- end:  "right" shows the goal at +x (the default attacking direction), "left" the goal at -x.
+  #- goal_at_top: TRUE turns the view a quarter turn so the goal is at the top. The
+  #        plot becomes wide and short, which suits wide panels. Data still uses the
+  #        same x and y; the view is rotated, not mirrored.
 
   afl_check_dims(venue_length, venue_width, venue_arclength)
   end <- match.arg(end)
@@ -308,14 +311,34 @@ afl_half_field <- function(venue_length = 160, venue_width = 140, venue_arclengt
   if (!is.numeric(from) || length(from) != 1 || from < 0 || from >= A) {
     stop("from must be between 0 and venue_length / 2.", call. = FALSE)
   }
+  stopifnot(is.logical(goal_at_top), length(goal_at_top) == 1)
   xlim <- if (end == "right") c(from, A + 13) else c(-A - 13, -from)
+  ylim <- c(-B - 5, B + 5)
 
   field <- data.frame(x = venue_length, y = venue_width)
-  ggplot(field) +
+  p <- ggplot(field) +
     afl_surface(venue_length, venue_width) +
     afl_markings(venue_length, venue_width, venue_arclength) +
-    theme_void() +
-    coord_fixed(ratio = 1, xlim = xlim, ylim = c(-B - 5, B + 5), expand = FALSE)
+    theme_void()
+
+  if (!goal_at_top) {
+    return(p + coord_fixed(ratio = 1, xlim = xlim, ylim = ylim, expand = FALSE))
+  }
+
+  #A quarter turn: x runs up the page, and the reversed scale keeps it a rotation
+  #(not a mirror image). Coordinate limits are given in data units and pass through
+  #the scale's transform, so on a reversed scale they must be given high-to-low:
+  #low-to-high limits would undo the reversal and mirror the ground.
+  #theme(aspect.ratio) keeps metres square because coord_flip() has no fixed ratio.
+  if (end == "right") {
+    p + scale_y_reverse() +
+      coord_flip(xlim = xlim, ylim = rev(ylim), expand = FALSE) +
+      theme(aspect.ratio = diff(xlim) / diff(ylim))
+  } else {
+    p + scale_x_reverse() +
+      coord_flip(xlim = rev(xlim), ylim = ylim, expand = FALSE) +
+      theme(aspect.ratio = diff(xlim) / diff(ylim))
+  }
 }
 
 
