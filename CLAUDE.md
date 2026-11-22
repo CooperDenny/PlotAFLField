@@ -1,12 +1,17 @@
 # PlotAFLField
 
-R function for plotting a customisable AFL field using ggplot2.
+R functions for plotting a customisable AFL field, and analysis views on top of it, using ggplot2.
 
-## Function
+## Functions (in `plot_afl_field.R`)
 
-`afl_field(venue_length, venue_width, venue_arclength)` in `plot_afl_field.R`
+- `afl_field(venue_length, venue_width, venue_arclength)` — the whole ground. Parameters control the oval dimensions — different AFL venues have different field sizes.
+- `afl_half_field(..., from, end, vertical)` — one end, for shot maps
+- `afl_distance_rings(venue_length, venue_width, distances)` — layer of dashed rings at set distances from the centre of the goal line, clipped like the 50 m arc
+- `afl_zones()` / `afl_zone_of()` / `afl_zone_map()` — 3 thirds x 3 lanes; corridor width is a parameter
+- `afl_heatmap()` — base-R Gaussian KDE clipped to the boundary, opaque ramp starting at the grass colour
+- `afl_markings()` — layer of every marking, for redrawing lines over fills
 
-Parameters control the oval dimensions — different AFL venues have different field sizes.
+`examples.R` regenerates every image in `images/` from simulated data (`Rscript examples.R`, under a UTF-8 locale so the degree sign renders).
 
 ## Usage
 
@@ -26,6 +31,9 @@ Keep the signature and return type stable: FootyStatsApp sources this file from 
 - Markings follow the AFL Laws: 50 m centre square, 3 m / 10 m centre circles, 9 m x 6.4 m goal squares, posts 6.4 m apart.
 - `afl_arc_angle()` solves the circle-ellipse intersection exactly, so the 50 m arcs meet the boundary for any ground shape.
 - Outlines and arcs are drawn with `geom_path` (not ggforce) so line widths behave the same on every ggforce version.
+- Every marking is a row in `afl_marking_data()` (posts, straight lines, curved paths) and is drawn once by `afl_markings()`. Edit the tables rather than adding `geom_segment()` calls.
+- Analysis functions assume the team of interest attacks towards +x; "Left" lane is y > corridor_width / 2.
+- `vertical = TRUE` on every ground-drawing function goes through `afl_view()`: coord_flip + a reversed scale (a rotation, not a mirror) with fixed limits and theme(aspect.ratio) for square metres. Coord limits pass through the scale transform, so they are given high-to-low on the reversed axis (low-to-high mirrors the ground). New ground-drawing functions should end with `afl_view()` / `afl_full_view()` rather than their own coord.
 
 ## Example
 
