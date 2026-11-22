@@ -6,7 +6,7 @@ R functions for plotting a customisable AFL field, and analysis views on top of 
 
 - `afl_field(venue_length, venue_width, venue_arclength)` — the whole ground. Parameters control the oval dimensions — different AFL venues have different field sizes.
 - `afl_half_field(..., from, end, vertical)` — one end, for shot maps
-- `afl_angle_contours(venue_length, venue_width, angles)` — layer of equal scoring-angle arcs (circles through both goal posts)
+- `afl_distance_rings(venue_length, venue_width, distances)` — layer of dashed rings at set distances from the centre of the goal line, clipped like the 50 m arc
 - `afl_zones()` / `afl_zone_of()` / `afl_zone_map()` — 3 thirds x 3 lanes; corridor width is a parameter
 - `afl_heatmap()` — base-R Gaussian KDE clipped to the boundary, opaque ramp starting at the grass colour
 - `afl_markings()` — layer of every marking, for redrawing lines over fills

@@ -6,7 +6,7 @@
 #   source("https://raw.githubusercontent.com/CooperDenny/PlotAFLField/main/plot_afl_field.R")
 #   afl_field(venue_length = 160, venue_width = 140, venue_arclength = 50)
 #   afl_half_field(venue_length = 160, venue_width = 140, venue_arclength = 50)
-#   afl_half_field() + afl_angle_contours(venue_length = 160, venue_width = 140)
+#   afl_half_field() + afl_distance_rings(venue_length = 160, venue_width = 140)
 #   afl_zone_map(data, venue_length = 160, venue_width = 140, venue_arclength = 50)
 #   afl_heatmap(data, venue_length = 160, venue_width = 140, venue_arclength = 50)
 #
@@ -363,52 +363,47 @@ afl_half_field <- function(venue_length = 160, venue_width = 140, venue_arclengt
 }
 
 
-#Lines of equal scoring angle: every point on one line sees the 6.4m goal mouth at the
-#same angle. By the inscribed angle theorem each line is an arc of a circle through
-#both goal posts, with radius 3.2 / sin(angle) and centre 3.2 / tan(angle) in front
-#of the goal line. Add to afl_field() or afl_half_field().
-afl_angle_contours <- function(venue_length = 160, venue_width = 140,
-                               angles = c(10, 15, 20, 30), end = c("right", "left", "both"),
+#Dashed rings at set distances from the centre of the goal line, to read how far out
+#each shot was taken. Each ring is clipped to the ground and to the field side of the
+#goal line, like the 50m arc. Add to afl_field() or afl_half_field().
+afl_distance_rings <- function(venue_length = 160, venue_width = 140,
+                               distances = c(20, 30, 40), end = c("right", "left", "both"),
                                labels = TRUE, colour = "white", linewidth = 0.4,
                                linetype = "dashed", label_size = 2.6) {
   afl_check_dims(venue_length, venue_width)
   end <- match.arg(end)
-  if (!is.numeric(angles) || any(angles <= 0 | angles >= 180)) {
-    stop("angles must be in degrees, between 0 and 180.", call. = FALSE)
+  if (!is.numeric(distances) || length(distances) == 0 || any(is.na(distances) | distances <= 0)) {
+    stop("distances must be positive numbers of metres.", call. = FALSE)
   }
   A <- venue_length / 2
   B <- venue_width / 2
-  g <- afl_goal_half_width
 
-  arcs <- do.call(rbind, lapply(angles, function(a) {
-    th <- a * pi / 180
-    R  <- g / sin(th)
-    cx <- A - g / tan(th)
-    t  <- seq(0, 2 * pi, length.out = 1441)
-    x  <- cx + R * cos(t)
-    y  <- R * sin(t)
-    #Keep the part of the circle on the ground and in front of the goal line
+  rings <- do.call(rbind, lapply(distances, function(r) {
+    t <- seq(0, 2 * pi, length.out = 1441)
+    x <- A + r * cos(t)
+    y <- r * sin(t)
+    #Keep the part of the ring on the ground and in front of the goal line
     x[x > A | x^2 / A^2 + y^2 / B^2 > 1] <- NA
-    data.frame(angle = a, x = x, y = y)
+    data.frame(ring = paste("right", r), distance = r, x = x, y = y)
   }))
-  #Label each line where it crosses the centre line of the ground: 3.2 * cot(angle / 2) out
-  labs <- data.frame(angle = angles, x = A - g / tan(angles * pi / 360), y = 0)
+  #Label each ring where it crosses the centre line of the ground, straight out from goal
+  labs <- data.frame(distance = distances, x = A - distances, y = 0)
   labs <- labs[labs$x > -A, ]
 
   if (end == "left") {
-    arcs$x <- -arcs$x
-    labs$x <- -labs$x
+    rings$x <- -rings$x
+    labs$x  <- -labs$x
   } else if (end == "both") {
-    arcs <- rbind(arcs, transform(arcs, x = -x, angle = -angle))
-    labs <- rbind(labs, transform(labs, x = -x))
+    rings <- rbind(rings, transform(rings, x = -x, ring = sub("right", "left", ring)))
+    labs  <- rbind(labs, transform(labs, x = -x))
   }
 
   layers <- list(
-    geom_path(data = arcs, aes(x, y, group = angle), colour = colour, linewidth = linewidth,
+    geom_path(data = rings, aes(x, y, group = ring), colour = colour, linewidth = linewidth,
               linetype = linetype, na.rm = TRUE, inherit.aes = FALSE)
   )
-  if (labels) {
-    layers <- c(layers, geom_label(data = labs, aes(x, y, label = paste0(abs(angle), "°")),
+  if (labels && nrow(labs) > 0) {
+    layers <- c(layers, geom_label(data = labs, aes(x, y, label = paste0(distance, " m")),
                                    size = label_size, colour = "grey15", fill = colour,
                                    label.size = 0, label.padding = unit(0.12, "lines"),
                                    inherit.aes = FALSE))

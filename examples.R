@@ -29,23 +29,21 @@ save(afl_field(160, 140, 50, vertical = TRUE), "afl_field_vertical.png", 5.6, 7)
 save(afl_half_field(160, 140, 50), "afl_half_field.png", 4.6, 6.6)
 
 ##################################################################
-# Scoring-angle contours and a shot map
+# Distance rings and a shot map
 ##################################################################
 
-save(afl_field(L, W, R) + afl_angle_contours(L, W, angles = c(10, 20, 30), end = "both"),
-     "afl_angle_contours.png", 7, 6)
+save(afl_field(L, W, R) + afl_distance_rings(L, W, end = "both"), "afl_distance_rings.png", 7, 6)
 
-#Simulated shots inside the forward 50. The chance of a goal rises with the angle
-#the shooter has at the goal mouth.
+#Simulated shots inside the forward 50. The chance of a goal falls with distance from goal.
 shots <- data.frame(x = runif(400, A - R, A - 1), y = runif(400, -R, R))
 shots <- on_ground(shots[(shots$x - A)^2 + shots$y^2 <= R^2, ])[1:70, ]
-angle <- (atan2(3.2 - shots$y, A - shots$x) - atan2(-3.2 - shots$y, A - shots$x)) * 180 / pi
-goal  <- runif(nrow(shots)) < plogis(-1.3 + 0.085 * angle)
+dist  <- sqrt((A - shots$x)^2 + shots$y^2)
+goal  <- runif(nrow(shots)) < plogis(1.6 - 0.06 * dist)
 shots$result <- factor(ifelse(goal, "Goal", ifelse(runif(nrow(shots)) < 0.7, "Behind", "No score")),
                        levels = c("Goal", "Behind", "No score"))
 
 shot_map <- afl_half_field(L, W, R, from = A - R - 3) +
-  afl_angle_contours(L, W) +
+  afl_distance_rings(L, W) +
   geom_point(data = shots, aes(x, y, fill = result), shape = 21, size = 3.2, stroke = 0.6,
              colour = "black") +
   scale_fill_manual(values = c(Goal = "#FFD23F", Behind = "#3A86FF", `No score` = "grey80"),
@@ -55,7 +53,7 @@ save(shot_map, "afl_shot_map.png", 5.2, 6.4)
 
 #The same shots with the ground vertical, goal at the top: a wide, short panel
 shot_map_top <- afl_half_field(L, W, R, from = A - R - 3, vertical = TRUE) +
-  afl_angle_contours(L, W) +
+  afl_distance_rings(L, W) +
   geom_point(data = shots, aes(x, y, fill = result), shape = 21, size = 3, stroke = 0.6,
              colour = "black") +
   scale_fill_manual(values = c(Goal = "#FFD23F", Behind = "#3A86FF", `No score` = "grey80"),
